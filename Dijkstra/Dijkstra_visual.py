@@ -94,21 +94,39 @@ for y in range(0, screen_height, block_size_y):
 rect = pygame.Rect(0, 0, block_size_x, block_size_y)
 pygame.draw.rect(screen, (255, 0, 0), rect)
 
-# # // Color end location
-# rect = pygame.Rect(screen_width - block_size_x, screen_height - block_size_y, block_size_x, block_size_y)
-# pygame.draw.rect(screen, (255, 215, 0), rect)
-# pygame.display.update()
-
 # // Update grid lines, so they don't get overlapped by the blocks
 for begin_location in range(0, screen_height, block_size_y):
     pygame.draw.line(screen, (0, 0, 0), (0, begin_location), (screen_width, begin_location))
     pygame.draw.line(screen, (0, 0, 0), (begin_location, 0), (begin_location, screen_height))
 pygame.display.update()
 
+found = False
+clicked_tile = None
+
+# // Wait for user to select end location and mark its position
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit()
+
+        # // Find position of mouse click and calculate the position on the grid
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_x = mouse_pos[0]
+            mouse_y = mouse_pos[1]
+
+            # // In the case that the clicked tile is not a rock, mark that tile with a golden squar
+            clicked_tile = (mouse_x // block_size_x, mouse_y // block_size_y)
+            if clicked_tile not in rocks:
+                found = True
+                rect = pygame.Rect(clicked_tile[0] * block_size_x, clicked_tile[1] * block_size_y, block_size_x, block_size_y)
+                pygame.draw.rect(screen, (255, 215, 0), rect)
+                pygame.display.update()
+                break
+
+    if found:
+        end_location = clicked_tile
+        break
 
 
 ################################## main loop ##############################################
@@ -143,9 +161,10 @@ while queue:
     time.sleep(0.01)
 
 
+################################## show shortest path ##############################################
 # // Find the shortest path by going in reverse order from the end location
-previous_location = previous[maze_width - 1, maze_height - 1]
-shortest_path = [(maze_width - 1, maze_height - 1), previous_location]
+previous_location = previous[end_location]
+shortest_path = [end_location, previous_location]
 
 while previous_location != (0, 0):
     previous_location = previous[previous_location]
@@ -153,6 +172,10 @@ while previous_location != (0, 0):
 
 # // Reverse order from end -> start to start -> end
 shortest_path.reverse()
+
+rect = pygame.Rect(clicked_tile[0] * block_size_x, clicked_tile[1] * block_size_y, block_size_x, block_size_y)
+pygame.draw.rect(screen, (255, 215, 0), rect)
+pygame.display.update()
 
 # // Fill the path in green on the screen
 for tile_location in shortest_path:
@@ -166,8 +189,3 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit()
-
-
-
-
-
